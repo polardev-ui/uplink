@@ -12,10 +12,8 @@ Uplink is a terminal-based public chat room with authentication, powered by Fire
 1. Clone the repository or install directly from GitHub:
 
 ```
-pip install git+https://github.com/yourname/uplink.git
+pip install git+https://github.com/polardev-ui/uplink.git
 ```
-
-2. Set up your Firebase project and update the `FIREBASE_CONFIG` in `uplink_pkg/client.py` with your credentials.
 
 ## Usage
 
