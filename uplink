@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+import asyncio
+import websockets
+from prompt_toolkit import prompt
+import getpass
+import os
+
+SERVER = 'ws://localhost:8765'
+
+def clear():
+    os.system('clear' if os.name == 'posix' else 'cls')
+
+async def uplink_client():
+    async with websockets.connect(SERVER) as ws:
+        clear()
+        while True:
+            msg = await ws.recv()
+            if msg.startswith('Welcome to Uplink!'):
+                print(msg)
+                action = prompt('> ')
+                await ws.send(action)
+            elif msg.startswith('Enter new username:'):
+                print(msg)
+                username = prompt('Username: ')
+                await ws.send(username)
+            elif msg.startswith('Enter username:'):
+                print(msg)
+                username = prompt('Username: ')
+                await ws.send(username)
+            elif msg.startswith('Enter password:'):
+                print(msg)
+                password = getpass.getpass('Password: ')
+                await ws.send(password)
+            elif msg.startswith('Confirm password:'):
+                print(msg)
+                confirm = getpass.getpass('Confirm: ')
+                await ws.send(confirm)
+            elif msg.startswith('Registration successful!') or msg.startswith('Login successful!'):
+                print(msg)
+            elif msg.startswith('You are now in the public chat'):
+                print(msg)
+                break
+            else:
+                print(msg)
+        # Chat loop
+        async def recv_loop():
+            while True:
+                try:
+                    msg = await ws.recv()
+                    print(f'\r{msg}\n> ', end='')
+                except:
+                    break
+        recv_task = asyncio.create_task(recv_loop())
+        while True:
+            try:
+                text = prompt('> ')
+                await ws.send(text)
+            except (EOFError, KeyboardInterrupt):
+                print('\nExiting Uplink.')
+                break
+        recv_task.cancel()
+
+if __name__ == '__main__':
+    asyncio.run(uplink_client())

@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: uplink
+Version: 0.1.0
+Summary: Terminal public chat room with authentication
+Author: Josh Clark
+Author-email: josh@wsgpolar.me
+Requires-Python: >=3.8
+Requires-Dist: prompt_toolkit
+Requires-Dist: pyrebase4
+Dynamic: author
+Dynamic: author-email
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

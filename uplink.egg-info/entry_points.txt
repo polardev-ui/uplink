@@ -1,0 +1,2 @@
+[console_scripts]
+uplink = uplink_pkg.client:main
