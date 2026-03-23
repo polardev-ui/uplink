@@ -200,7 +200,8 @@ def main():
         with patch_stdout(raw=True):
             while not stop_event.is_set():
                 try:
-                    text = session.prompt('> ', erase_when_done=True).strip()
+                    text = session.prompt('> ').strip()
+                    print('\x1b[1A\x1b[2K', end='')
                 except (EOFError, KeyboardInterrupt):
                     text = '/quit'
 
