@@ -1,7 +1,7 @@
 import os
 import getpass
 from prompt_toolkit import prompt
-import pyrebase
+import requests
 
 # Firebase config placeholder (replace with your actual config)
 FIREBASE_CONFIG = {
@@ -11,9 +11,35 @@ FIREBASE_CONFIG = {
     "storageBucket": "uplink-c269e.firebasestorage.app"
 }
 
-firebase = pyrebase.initialize_app(FIREBASE_CONFIG)
-auth = firebase.auth()
-db = firebase.database()
+API_KEY = FIREBASE_CONFIG["apiKey"]
+DATABASE_URL = FIREBASE_CONFIG["databaseURL"].rstrip("/")
+
+
+def _firebase_auth(endpoint, payload):
+    url = f"https://identitytoolkit.googleapis.com/v1/accounts:{endpoint}?key={API_KEY}"
+    response = requests.post(url, json=payload, timeout=20)
+    data = response.json()
+    if not response.ok:
+        raise RuntimeError(data.get("error", {}).get("message", "Authentication failed"))
+    return data
+
+
+def _get_messages(id_token=None):
+    params = {"auth": id_token} if id_token else None
+    response = requests.get(f"{DATABASE_URL}/messages.json", params=params, timeout=20)
+    data = response.json()
+    if not response.ok:
+        raise RuntimeError(data.get("error", "Unable to fetch messages"))
+    return data or {}
+
+
+def _push_message(message, id_token=None):
+    params = {"auth": id_token} if id_token else None
+    response = requests.post(f"{DATABASE_URL}/messages.json", params=params, json=message, timeout=20)
+    data = response.json()
+    if not response.ok:
+        raise RuntimeError(data.get("error", "Unable to send message"))
+    return data
 
 def clear():
     os.system('clear' if os.name == 'posix' else 'cls')
@@ -21,6 +47,8 @@ def clear():
 def main():
     clear()
     print("Welcome to Uplink! Type 'login' or 'register':")
+    username = None
+    id_token = None
     while True:
         action = prompt('> ').strip().lower()
         if action == 'register':
@@ -31,7 +59,15 @@ def main():
                 print('Passwords do not match.')
                 continue
             try:
-                user = auth.create_user_with_email_and_password(f"{username}@uplink.app", password)
+                user = _firebase_auth(
+                    "signUp",
+                    {
+                        "email": f"{username}@uplink.app",
+                        "password": password,
+                        "returnSecureToken": True,
+                    },
+                )
+                id_token = user.get("idToken")
                 print('Registration successful!')
                 break
             except Exception as e:
@@ -40,7 +76,15 @@ def main():
             username = prompt('Username: ')
             password = getpass.getpass('Password: ')
             try:
-                user = auth.sign_in_with_email_and_password(f"{username}@uplink.app", password)
+                user = _firebase_auth(
+                    "signInWithPassword",
+                    {
+                        "email": f"{username}@uplink.app",
+                        "password": password,
+                        "returnSecureToken": True,
+                    },
+                )
+                id_token = user.get("idToken")
                 print('Login successful!')
                 break
             except Exception as e:
@@ -51,7 +95,7 @@ def main():
     # Simple polling chat loop
     last_seen = 0
     while True:
-        messages = db.child('messages').get().val() or {}
+        messages = _get_messages(id_token=id_token) or {}
         # Firebase returns a dict of {key: message}, so convert to list
         if isinstance(messages, dict):
             # Sort by key to preserve order (Firebase keys are time-based)
@@ -69,4 +113,4 @@ def main():
         if text.strip() == '/quit':
             print('Goodbye!')
             break
-        db.child('messages').push(f"{username}: {text}")
+        _push_message(f"{username}: {text}", id_token=id_token)

@@ -6,7 +6,7 @@ Author: Josh Clark
 Author-email: josh@wsgpolar.me
 Requires-Python: >=3.8
 Requires-Dist: prompt_toolkit
-Requires-Dist: pyrebase4
+Requires-Dist: requests
 Dynamic: author
 Dynamic: author-email
 Dynamic: requires-dist

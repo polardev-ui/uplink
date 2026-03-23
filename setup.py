@@ -9,7 +9,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'prompt_toolkit',
-        'pyrebase4',
+        'requests',
     ],
     entry_points={
         'console_scripts': [

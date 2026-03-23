@@ -1,3 +1,4 @@
 websockets
 bcrypt
 prompt_toolkit
+requests
