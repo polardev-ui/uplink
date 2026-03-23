@@ -200,7 +200,7 @@ def main():
         with patch_stdout(raw=True):
             while not stop_event.is_set():
                 try:
-                    text = session.prompt('> ').strip()
+                    text = session.prompt('> ', erase_when_done=True).strip()
                 except (EOFError, KeyboardInterrupt):
                     text = '/quit'
 
